@@ -1,0 +1,14 @@
+{
+  "name": "MicroPiano",
+  "short_name": "MicroPiano",
+  "description": "24-TET Microtonal Piano — play quarter-tones in the browser",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0d0d14",
+  "theme_color": "#0d0d14",
+  "icons": [
+    { "src": "/icon.png", "sizes": "2048x2048", "type": "image/png", "purpose": "any" },
+    { "src": "/icon.png", "sizes": "2048x2048", "type": "image/png", "purpose": "maskable" }
+  ]
+}

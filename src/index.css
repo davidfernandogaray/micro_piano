@@ -1,0 +1,21 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  width: 100%; height: 100%;
+  background: #0d0d14;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+button { -webkit-tap-highlight-color: transparent; }
+
+#root {
+  width: 100%;
+  height: 100%;
+  /* respect notch and home indicator in landscape */
+  padding-left:   max(env(safe-area-inset-left), 0px);
+  padding-right:  max(env(safe-area-inset-right), 0px);
+  padding-top:    env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
