@@ -70,24 +70,19 @@ export default function App() {
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '4px 12px', borderBottom: '1px solid #161622',
-          flexShrink: 0, minHeight: 30,
+          flexShrink: 0, minHeight: 38,
         }}>
           <span style={{
             fontSize: 22, color: '#e8c040',
             fontFamily: "'Pinyon Script', 'Palatino Linotype', cursive",
             letterSpacing: 0.5, lineHeight: 1,
           }}>MicroPiano</span>
-          <span style={{
-            fontSize: 9, color: '#4fc3f7',
-            background: 'rgba(79,195,247,0.1)', border: '1px solid rgba(79,195,247,0.25)',
-            borderRadius: 8, padding: '1px 6px', fontFamily: 'monospace',
-          }}>24-TET</span>
           <div style={{ flex: 1 }} />
           <button onClick={() => setPage('midi')} style={{
-            background: 'rgba(144,80,224,0.15)', color: '#b388ff',
-            border: '1px solid rgba(144,80,224,0.4)', borderRadius: 6,
-            padding: '2px 10px', fontSize: 11, cursor: 'pointer', fontFamily: 'monospace',
-            WebkitTapHighlightColor: 'transparent',
+            background: 'rgba(144,80,224,0.15)', color: '#d0b8ff',
+            border: '1px solid rgba(144,80,224,0.5)', borderRadius: 6,
+            padding: '4px 14px', fontSize: 12, cursor: 'pointer', fontFamily: 'monospace',
+            WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation',
           }}>MIDI ▶</button>
         </div>
 

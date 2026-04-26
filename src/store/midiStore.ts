@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import { INSTRUMENTS } from '../audio/instruments';
 
+export interface DrumStep { active: boolean; velocity: number; }
+export interface DrumRow  { instrumentId: string; steps: DrumStep[]; }
+
+export const DRUM_STEP_COUNT = 16;
+
 export interface MidiNote {
   id: string;
   noteIndex: number;
@@ -14,6 +19,8 @@ export interface MidiClip {
   startBar: number;
   lengthBars: number;
   notes: MidiNote[];
+  drumRows?: DrumRow[];
+  stepCount?: number;
 }
 
 export interface MidiTrack {
@@ -23,6 +30,7 @@ export interface MidiTrack {
   color: string;
   clips: MidiClip[];
   muted: boolean;
+  trackType: 'piano' | 'drums';
 }
 
 const TRACK_COLORS = [
@@ -43,7 +51,20 @@ function makeTrack(index: number): MidiTrack {
     id: uid(), name: `Track ${index + 1}`,
     instrumentId: INSTRUMENTS[index % INSTRUMENTS.length].id,
     color: TRACK_COLORS[index % TRACK_COLORS.length],
-    clips: [], muted: false,
+    clips: [], muted: false, trackType: 'piano',
+  };
+}
+
+const DRUM_IDS = ['kick','snare','hihat_c','hihat_o','tom_h','tom_l','crash','ride'];
+
+function makeDefaultDrumClip(startBar: number): MidiClip {
+  return {
+    id: uid(), startBar, lengthBars: 2, notes: [],
+    stepCount: DRUM_STEP_COUNT,
+    drumRows: DRUM_IDS.map(instrumentId => ({
+      instrumentId,
+      steps: Array.from({ length: DRUM_STEP_COUNT }, () => ({ active: false, velocity: 0.8 })),
+    })),
   };
 }
 
@@ -95,6 +116,9 @@ interface MidiState {
   extendTimeline: () => void;
   moveTrack: (id: string, dir: 'up' | 'down') => void;
   updateNote: (trackId: string, clipId: string, noteId: string, patch: Partial<MidiNote>) => void;
+  addDrumTrack: () => void;
+  updateDrumStep: (trackId: string, clipId: string, rowId: string, stepIdx: number, patch: Partial<DrumStep>) => void;
+  loadProject: (data: { tracks: MidiTrack[]; totalBars: number; bpm: number; timeSig: string }) => void;
 }
 
 export const useMidiStore = create<MidiState>((set, get) => ({
@@ -120,11 +144,13 @@ export const useMidiStore = create<MidiState>((set, get) => ({
     tracks: s.tracks.map(t => t.id === id ? { ...t, ...patch } : t),
   })),
 
-  addClip: (trackId, startBar) => set(s => ({
-    tracks: s.tracks.map(t => t.id !== trackId ? t : {
-      ...t, clips: [...t.clips, makeClip(startBar)],
-    }),
-  })),
+  addClip: (trackId, startBar) => set(s => {
+    const track = s.tracks.find(t => t.id === trackId);
+    const clip = track?.trackType === 'drums' ? makeDefaultDrumClip(startBar) : makeClip(startBar);
+    return {
+      tracks: s.tracks.map(t => t.id !== trackId ? t : { ...t, clips: [...t.clips, clip] }),
+    };
+  }),
 
   deleteClip: (trackId, clipId) => set(s => ({
     tracks: s.tracks.map(t => t.id !== trackId ? t : {
@@ -150,8 +176,10 @@ export const useMidiStore = create<MidiState>((set, get) => ({
     if (!clipboard) return;
     set(s => ({
       tracks: s.tracks.map(t => t.id !== trackId ? t : {
-        ...t, clips: [...t.clips, { ...clipboard, id: uid(), startBar,
+        ...t, clips: [...t.clips, {
+          ...clipboard, id: uid(), startBar,
           notes: clipboard.notes.map(n => ({ ...n, id: uid() })),
+          drumRows: clipboard.drumRows?.map(r => ({ ...r, steps: r.steps.map(s2 => ({ ...s2 })) })),
         }],
       }),
     }));
@@ -184,4 +212,28 @@ export const useMidiStore = create<MidiState>((set, get) => ({
   setRecording: (isRecording) => set({ isRecording }),
   setPlayheadTick: (playheadTick) => set({ playheadTick }),
   extendTimeline: () => set(s => ({ totalBars: s.totalBars + 8 })),
+
+  addDrumTrack: () => set(s => {
+    const idx = s.tracks.length;
+    const DRUM_COLORS = ['#ef5350','#ff9800','#fdd835','#aed581','#4db6ac','#4fc3f7','#ce93d8','#9fa8da'];
+    const track: MidiTrack = {
+      id: uid(), name: `Drums ${idx + 1}`,
+      instrumentId: 'piano',
+      color: DRUM_COLORS[idx % DRUM_COLORS.length],
+      clips: [], muted: false, trackType: 'drums',
+    };
+    return { tracks: [...s.tracks, track] };
+  }),
+
+  updateDrumStep: (trackId, clipId, rowId, stepIdx, patch) => set(s => ({
+    tracks: s.tracks.map(t => t.id !== trackId ? t : {
+      ...t, clips: t.clips.map(c => c.id !== clipId ? c : {
+        ...c, drumRows: c.drumRows?.map(r => r.instrumentId !== rowId ? r : {
+          ...r, steps: r.steps.map((step, i) => i !== stepIdx ? step : { ...step, ...patch }),
+        }),
+      }),
+    }),
+  })),
+
+  loadProject: (data) => set({ tracks: data.tracks, totalBars: data.totalBars, bpm: data.bpm, timeSig: data.timeSig }),
 }));

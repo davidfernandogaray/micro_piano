@@ -23,7 +23,7 @@ export function InstrumentSelector() {
               flexShrink: 0, padding: '3px 11px', borderRadius: 14,
               border: `1px solid ${on ? '#4fc3f7' : '#1e1e2e'}`,
               background: on ? 'rgba(79,195,247,0.12)' : 'transparent',
-              color: on ? '#4fc3f7' : '#555',
+              color: on ? '#4fc3f7' : '#bbb',
               fontSize: 12, fontFamily: 'system-ui',
               cursor: 'pointer', whiteSpace: 'nowrap',
               WebkitTapHighlightColor: 'transparent',

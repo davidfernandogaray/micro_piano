@@ -1,10 +1,10 @@
-export const WHITE_W  = 60;
-export const BLACK_W  = 42;
-export const GRAY_W   = 26;
-export const WHITE_H  = 250;   // taller keys → ~75% of landscape height
-export const BLACK_H  = 165;
-export const GRAY_H   = 132;
-export const OCTAVE_W = 7 * WHITE_W; // 420
+export const WHITE_W  = 66;
+export const BLACK_W  = 46;
+export const GRAY_W   = 28;   // narrower than black but touchable
+export const WHITE_H  = 220;
+export const BLACK_H  = 155;
+export const GRAY_H   = 79;
+export const OCTAVE_W = 7 * WHITE_W; // 462
 
 export type KeyVariant = 'white' | 'black' | 'gray';
 
@@ -15,39 +15,38 @@ export interface KeyLayout {
   zIndex: number;
 }
 
-// WHITE_W=60  BLACK_W=42  BLACK_W/2=21
-// White: C=0 D=60 E=120 F=180 G=240 A=300 B=360
-// Black: C#=39 D#=99 F#=219 G#=279 A#=339
-// Centers: C=30 C#=60 D=90 D#=120 E=150 F=210 F#=240 G=270 G#=300 A=330 A#=360 B=390 nextC=450
-// Gray midpoint = avg of adjacent semitone centers; GRAY_W/2=13
-// B½ special: centered at octave boundary (420), left=407 – extends 13px into next octave visually
+// WHITE_W=66  BLACK_W=46  GRAY_W=28 (GRAY_W/2=14)
+// White centers: C=33 D=99 E=165 F=231 G=297 A=363 B=429
+// Black centers: C#=66 D#=132 F#=264 G#=330 A#=396
+// Gray left = midpoint_between_adjacent_semitones - GRAY_W/2
+// B+: left = OCTAVE_W - GRAY_W/2 = 462-14 = 448
 
 export const OCTAVE_LAYOUTS: KeyLayout[] = [
   { left: 0,   width: WHITE_W, height: WHITE_H, zIndex: 1 }, // 0  C
-  { left: 32,  width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 1  C½   (30+60)/2=45→32
-  { left: 39,  width: BLACK_W, height: BLACK_H, zIndex: 2 }, // 2  C#
-  { left: 62,  width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 3  C#½  (60+90)/2=75→62
-  { left: 60,  width: WHITE_W, height: WHITE_H, zIndex: 1 }, // 4  D
-  { left: 92,  width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 5  D½   (90+120)/2=105→92
-  { left: 99,  width: BLACK_W, height: BLACK_H, zIndex: 2 }, // 6  D#
-  { left: 122, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 7  D#½  (120+150)/2=135→122
-  { left: 120, width: WHITE_W, height: WHITE_H, zIndex: 1 }, // 8  E
-  { left: 167, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 9  E½   (150+210)/2=180→167
-  { left: 180, width: WHITE_W, height: WHITE_H, zIndex: 1 }, // 10 F
-  { left: 212, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 11 F½   (210+240)/2=225→212
-  { left: 219, width: BLACK_W, height: BLACK_H, zIndex: 2 }, // 12 F#
-  { left: 242, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 13 F#½  (240+270)/2=255→242
-  { left: 240, width: WHITE_W, height: WHITE_H, zIndex: 1 }, // 14 G
-  { left: 272, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 15 G½   (270+300)/2=285→272
-  { left: 279, width: BLACK_W, height: BLACK_H, zIndex: 2 }, // 16 G#
-  { left: 302, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 17 G#½  (300+330)/2=315→302
-  { left: 300, width: WHITE_W, height: WHITE_H, zIndex: 1 }, // 18 A
-  { left: 332, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 19 A½   (330+360)/2=345→332
-  { left: 339, width: BLACK_W, height: BLACK_H, zIndex: 2 }, // 20 A#
-  { left: 362, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 21 A#½  (360+390)/2=375→362
-  { left: 360, width: WHITE_W, height: WHITE_H, zIndex: 1 }, // 22 B
-  // B½: centered at octave boundary; left=OCTAVE_W-GRAY_W/2=407 (extends 13px into next C)
-  { left: 407, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 23 B½
+  { left: 36,  width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 1  C+   (33+66)/2=49.5 → 36
+  { left: 43,  width: BLACK_W, height: BLACK_H, zIndex: 2 }, // 2  C#
+  { left: 69,  width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 3  C#+  (66+99)/2=82.5 → 69
+  { left: 66,  width: WHITE_W, height: WHITE_H, zIndex: 1 }, // 4  D
+  { left: 102, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 5  D+   (99+132)/2=115.5 → 102
+  { left: 109, width: BLACK_W, height: BLACK_H, zIndex: 2 }, // 6  D#
+  { left: 135, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 7  D#+  (132+165)/2=148.5 → 135
+  { left: 132, width: WHITE_W, height: WHITE_H, zIndex: 1 }, // 8  E
+  { left: 184, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 9  E+   (165+231)/2=198 → 184
+  { left: 198, width: WHITE_W, height: WHITE_H, zIndex: 1 }, // 10 F
+  { left: 234, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 11 F+   (231+264)/2=247.5 → 234
+  { left: 241, width: BLACK_W, height: BLACK_H, zIndex: 2 }, // 12 F#
+  { left: 267, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 13 F#+  (264+297)/2=280.5 → 267
+  { left: 264, width: WHITE_W, height: WHITE_H, zIndex: 1 }, // 14 G
+  { left: 300, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 15 G+   (297+330)/2=313.5 → 300
+  { left: 307, width: BLACK_W, height: BLACK_H, zIndex: 2 }, // 16 G#
+  { left: 333, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 17 G#+  (330+363)/2=346.5 → 333
+  { left: 330, width: WHITE_W, height: WHITE_H, zIndex: 1 }, // 18 A
+  { left: 366, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 19 A+   (363+396)/2=379.5 → 366
+  { left: 373, width: BLACK_W, height: BLACK_H, zIndex: 2 }, // 20 A#
+  { left: 399, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 21 A#+  (396+429)/2=412.5 → 399
+  { left: 396, width: WHITE_W, height: WHITE_H, zIndex: 1 }, // 22 B
+  // B+: left = OCTAVE_W - GRAY_W/2 = 462 - 14 = 448
+  { left: 448, width: GRAY_W,  height: GRAY_H,  zIndex: 3 }, // 23 B+
 ];
 
 const GRAY_STEPS  = [1,3,5,7,9,11,13,15,17,19,21,23];

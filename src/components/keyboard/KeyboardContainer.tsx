@@ -5,11 +5,12 @@ import { STEPS_PER_OCTAVE, noteFrequency } from '../../audio/tuning';
 import { attackNote, releaseNote } from '../../audio/engine';
 import { useAppStore } from '../../store';
 
-const MIN_OCTAVE  = 1;
-const MAX_OCTAVE  = 7;
-const NUM_OCTAVES = MAX_OCTAVE - MIN_OCTAVE + 1; // 7
-const TOTAL_W     = NUM_OCTAVES * OCTAVE_W;
-const INIT_SCROLL = 2 * OCTAVE_W; // start at C3
+const MIN_OCTAVE    = 1;
+const MAX_OCTAVE    = 7;
+const NUM_OCTAVES   = MAX_OCTAVE - MIN_OCTAVE + 1; // 7
+const TOTAL_W       = NUM_OCTAVES * OCTAVE_W;
+const INIT_SCROLL   = 2 * OCTAVE_W; // start at C3
+const DEFAULT_ZOOM  = 1.3;
 
 const SEMITONE_LABEL   = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const SEMITONE_VARIANT = ['white','black','white','black','white','white','black','white','black','white','black','white'] as const;
@@ -39,7 +40,7 @@ function buildAllKeys(): KeyInfo[] {
         noteId: `${SEMITONE_LABEL[semi]}+${oct}`,
         noteIndex: mi, frequency: noteFrequency(mi),
         variant: 'gray', stepInOctave: oStep, octave: oct,
-        label: `${SEMITONE_LABEL[semi]}½`,
+        label: `${SEMITONE_LABEL[semi]}+`,
         absLeft: grayLeft,
       });
     }
@@ -103,7 +104,7 @@ function OctaveStrip({
           {OCTAVE_LABELS.map(lbl => (
             <div key={lbl} style={{
               flex: 1, textAlign: 'center',
-              fontSize: 9, color: '#3a3a4a',
+              fontSize: 9, color: '#8888aa',
               fontFamily: 'monospace', userSelect: 'none',
             }}>{lbl}</div>
           ))}
@@ -127,7 +128,7 @@ function OctaveStrip({
       {/* Zoom */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
         <button onClick={() => onZoomBy(-0.15)} style={navBtn}>−</button>
-        <span style={{ color: '#3a3a4a', fontSize: 9, fontFamily: 'monospace', minWidth: 30, textAlign: 'center' }}>
+        <span style={{ color: '#aaa', fontSize: 9, fontFamily: 'monospace', minWidth: 30, textAlign: 'center' }}>
           {Math.round(zoom * 100)}%
         </span>
         <button onClick={() => onZoomBy(0.15)} style={navBtn}>+</button>
@@ -140,11 +141,13 @@ function OctaveStrip({
 export function KeyboardContainer() {
   const containerRef    = useRef<HTMLDivElement>(null);
   const [scrollLeft, setScrollLeft] = useState(INIT_SCROLL);
-  const [zoom, setZoom]             = useState(1.0);
+  const [zoom, setZoom]             = useState(DEFAULT_ZOOM);
   const [containerW, setContainerW] = useState(800);
-  const scrollRef = useRef(INIT_SCROLL);
-  const zoomRef   = useRef(1.0);
-  const activePointers = useRef(new Map<number, number>());
+  const scrollRef  = useRef(INIT_SCROLL);
+  const zoomRef    = useRef(DEFAULT_ZOOM);
+  const activePointers   = useRef(new Map<number, number>());
+  const pointerPositions = useRef(new Map<number, { x: number; y: number }>());
+  const lastPinchDist    = useRef<number | null>(null);
   const { pressKey, releaseKey } = useAppStore();
 
   // Track container width for the octave strip
@@ -176,36 +179,6 @@ export function KeyboardContainer() {
     return NOTE_INDEX_MAP.get(octave * STEPS_PER_OCTAVE + step) ?? null;
   }, []);
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    e.preventDefault();
-    const key = getHitNote(e.clientX, e.clientY);
-    if (!key) return;
-    attackNote(key.noteIndex, key.frequency, e.pointerId);
-    activePointers.current.set(e.pointerId, key.noteIndex);
-    pressKey(key.noteId);
-  }, [getHitNote, pressKey]);
-
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    const curIndex = activePointers.current.get(e.pointerId);
-    if (curIndex === undefined) return;
-    const key = getHitNote(e.clientX, e.clientY);
-    if (!key || key.noteIndex === curIndex) return;
-    const oldKey = NOTE_INDEX_MAP.get(curIndex);
-    attackNote(key.noteIndex, key.frequency, e.pointerId);
-    activePointers.current.set(e.pointerId, key.noteIndex);
-    if (oldKey) releaseKey(oldKey.noteId);
-    pressKey(key.noteId);
-  }, [getHitNote, pressKey, releaseKey]);
-
-  const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    const noteIndex = activePointers.current.get(e.pointerId);
-    if (noteIndex === undefined) return;
-    releaseNote(e.pointerId);
-    const key = NOTE_INDEX_MAP.get(noteIndex);
-    if (key) releaseKey(key.noteId);
-    activePointers.current.delete(e.pointerId);
-  }, [releaseKey]);
-
   const scrollTo = useCallback((s: number) => {
     const clamped = Math.max(0, Math.min(s, TOTAL_W - OCTAVE_W * 2));
     setScrollLeft(clamped);
@@ -223,6 +196,65 @@ export function KeyboardContainer() {
       return next;
     });
   }, []);
+
+  const releasePointerNote = useCallback((pointerId: number) => {
+    const ni = activePointers.current.get(pointerId);
+    if (ni === undefined) return;
+    releaseNote(pointerId);
+    const k = NOTE_INDEX_MAP.get(ni);
+    if (k) releaseKey(k.noteId);
+    activePointers.current.delete(pointerId);
+  }, [releaseKey]);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    pointerPositions.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pointerPositions.current.size >= 2) {
+      // Second finger → enter pinch mode, release any playing note
+      releasePointerNote(e.pointerId);
+      for (const pid of [...activePointers.current.keys()]) releasePointerNote(pid);
+      lastPinchDist.current = null;
+      return;
+    }
+
+    const key = getHitNote(e.clientX, e.clientY);
+    if (!key) return;
+    attackNote(key.noteIndex, key.frequency, e.pointerId);
+    activePointers.current.set(e.pointerId, key.noteIndex);
+    pressKey(key.noteId);
+  }, [getHitNote, pressKey, releasePointerNote]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    pointerPositions.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pointerPositions.current.size >= 2) {
+      // Pinch zoom
+      const pts = [...pointerPositions.current.values()];
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      if (lastPinchDist.current !== null) {
+        zoomBy((dist - lastPinchDist.current) / 320);
+      }
+      lastPinchDist.current = dist;
+      return;
+    }
+
+    const curIndex = activePointers.current.get(e.pointerId);
+    if (curIndex === undefined) return;
+    const key = getHitNote(e.clientX, e.clientY);
+    if (!key || key.noteIndex === curIndex) return;
+    const oldKey = NOTE_INDEX_MAP.get(curIndex);
+    attackNote(key.noteIndex, key.frequency, e.pointerId);
+    activePointers.current.set(e.pointerId, key.noteIndex);
+    if (oldKey) releaseKey(oldKey.noteId);
+    pressKey(key.noteId);
+  }, [getHitNote, pressKey, releaseKey, zoomBy, releasePointerNote]);
+
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    pointerPositions.current.delete(e.pointerId);
+    if (pointerPositions.current.size < 2) lastPinchDist.current = null;
+    releasePointerNote(e.pointerId);
+  }, [releasePointerNote]);
 
   const sortedKeys = useMemo(() => [
     ...ALL_KEYS.filter(k => k.variant === 'white'),
@@ -283,8 +315,8 @@ export function KeyboardContainer() {
 }
 
 const navBtn: React.CSSProperties = {
-  background: 'transparent', color: '#3a3a5a',
-  border: '1px solid #1e1e2a', borderRadius: 4,
+  background: 'transparent', color: '#aaa',
+  border: '1px solid #2a2a3e', borderRadius: 4,
   padding: '2px 10px', fontSize: 12, cursor: 'pointer',
   WebkitTapHighlightColor: 'transparent',
   flexShrink: 0,

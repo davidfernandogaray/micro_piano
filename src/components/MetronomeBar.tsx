@@ -74,7 +74,7 @@ export function MetronomeBar() {
         }}
       />
       <button onClick={() => changeBpm(bpm + 1)} style={micro}>+</button>
-      <span style={{ color: '#333', fontSize: 9, fontFamily: 'monospace' }}>BPM</span>
+      <span style={{ color: '#999', fontSize: 9, fontFamily: 'monospace' }}>BPM</span>
 
       <div style={{ width: 1, height: 18, background: '#1e1e2e', flexShrink: 0 }} />
 
@@ -84,7 +84,7 @@ export function MetronomeBar() {
           ...micro,
           background: s === timeSig ? 'rgba(79,195,247,0.12)' : 'transparent',
           border: `1px solid ${s === timeSig ? '#4fc3f7' : '#1e1e2e'}`,
-          color: s === timeSig ? '#4fc3f7' : '#444',
+          color: s === timeSig ? '#4fc3f7' : '#aaa',
           fontSize: 10, padding: '2px 6px',
         }}>{s}</button>
       ))}
@@ -104,7 +104,7 @@ export function MetronomeBar() {
 }
 
 const micro: React.CSSProperties = {
-  background: 'transparent', color: '#666',
+  background: 'transparent', color: '#c0c0d0',
   border: '1px solid #1e1e2e', borderRadius: 4,
   padding: '2px 7px', fontSize: 12, cursor: 'pointer',
   WebkitTapHighlightColor: 'transparent',
