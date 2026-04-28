@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AudioProvider } from './components/AudioProvider';
 import { KeyboardContainer } from './components/keyboard/KeyboardContainer';
+import { LumaKeyboard } from './components/keyboard/LumaKeyboard';
 import { InstrumentSelector } from './components/InstrumentSelector';
 import { MetronomeBar } from './components/MetronomeBar';
 import MidiPage from './pages/MidiPage';
@@ -21,7 +22,8 @@ function useIsPortrait() {
 
 export default function App() {
   const isPortrait = useIsPortrait();
-  const [page, setPage] = useState<'piano' | 'midi'>('piano');
+  const [page, setPage]       = useState<'piano' | 'midi'>('piano');
+  const [kbType, setKbType]   = useState<'piano' | 'luma'>('piano');
 
   // Try to lock orientation on Android (ignored on iOS)
   useEffect(() => {
@@ -78,6 +80,21 @@ export default function App() {
             letterSpacing: 0.5, lineHeight: 1,
           }}>MicroPiano</span>
           <div style={{ flex: 1 }} />
+          {kbType === 'piano' ? (
+            <button onClick={() => setKbType('luma')} style={{
+              background: 'rgba(33,150,243,0.15)', color: '#90caf9',
+              border: '1px solid rgba(33,150,243,0.5)', borderRadius: 6,
+              padding: '4px 14px', fontSize: 12, cursor: 'pointer', fontFamily: 'monospace',
+              WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation',
+            }}>Luma ⬡</button>
+          ) : (
+            <button onClick={() => setKbType('piano')} style={{
+              background: 'rgba(240,235,224,0.1)', color: '#f0ebe0',
+              border: '1px solid rgba(240,235,224,0.4)', borderRadius: 6,
+              padding: '4px 14px', fontSize: 12, cursor: 'pointer', fontFamily: 'monospace',
+              WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation',
+            }}>Piano ♪</button>
+          )}
           <button onClick={() => setPage('midi')} style={{
             background: 'rgba(144,80,224,0.15)', color: '#d0b8ff',
             border: '1px solid rgba(144,80,224,0.5)', borderRadius: 6,
@@ -97,9 +114,13 @@ export default function App() {
         </div>
 
         {/* Keyboard fills remaining space */}
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <KeyboardContainer />
-        </div>
+        {kbType === 'piano' ? (
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+            <KeyboardContainer />
+          </div>
+        ) : (
+          <LumaKeyboard />
+        )}
       </div>
     </AudioProvider>
   );

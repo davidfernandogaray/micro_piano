@@ -332,7 +332,7 @@ export default function MidiEditor({ track, clip, timeSig, onClose, onUpdateClip
         </button>
         <button onClick={handleStop} style={{ ...transportBtn, color: '#4fc3f7' }}>⏹</button>
         <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-          <button onClick={handleRecord} style={{ ...transportBtn, color: '#ef5350', background: isRec ? 'rgba(239,83,80,0.2)' : 'transparent', boxShadow: isRec ? '0 0 10px rgba(239,83,80,0.4)' : 'none' }}>⏺</button>
+          <button onClick={handleRecord} style={{ ...transportBtn, color: '#fff', background: isRec ? '#ff1744' : '#c62828', border: '1px solid #b71c1c', boxShadow: isRec ? '0 0 12px rgba(255,23,68,0.6)' : 'none' }}>⏺</button>
           {countdown !== null && (
             <span style={{
               position: 'absolute', left: '100%', marginLeft: 6,

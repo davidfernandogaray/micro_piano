@@ -10,9 +10,9 @@ interface Props {
   label: string;
 }
 
-const IDLE   = { white: '#f0ebe0', black: '#1e2030', gray: '#607d8b' };
+const IDLE   = { white: '#f0ebe0', black: '#1e2030', gray: '#9e9e9e' };
 const ACTIVE = { white: '#7ecfff', black: '#1565c0', gray: '#29b6f6' };
-const BORDER = { white: '#c0b8a8', black: '#0a0a14', gray: '#37474f' };
+const BORDER = { white: '#c0b8a8', black: '#0a0a14', gray: '#757575' };
 
 const PianoKey = memo(function PianoKey({ noteId, variant, absLeft, layout, label }: Props) {
   const isActive = useAppStore((s) => s.activeNoteIds.has(noteId));

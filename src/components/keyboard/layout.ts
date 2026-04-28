@@ -1,6 +1,6 @@
 export const WHITE_W  = 66;
 export const BLACK_W  = 46;
-export const GRAY_W   = 28;   // narrower than black but touchable
+export const GRAY_W   = 29;   // narrower than black but touchable
 export const WHITE_H  = 220;
 export const BLACK_H  = 155;
 export const GRAY_H   = 79;
@@ -15,7 +15,7 @@ export interface KeyLayout {
   zIndex: number;
 }
 
-// WHITE_W=66  BLACK_W=46  GRAY_W=28 (GRAY_W/2=14)
+// WHITE_W=66  BLACK_W=46  GRAY_W=29 (GRAY_W/2=14.5)
 // White centers: C=33 D=99 E=165 F=231 G=297 A=363 B=429
 // Black centers: C#=66 D#=132 F#=264 G#=330 A#=396
 // Gray left = midpoint_between_adjacent_semitones - GRAY_W/2
