@@ -2,7 +2,7 @@ import { useRef, useState, useCallback, useMemo, useEffect } from 'react';
 import PianoKey from './PianoKey';
 import { OCTAVE_LAYOUTS, OCTAVE_W, WHITE_H, GRAY_W, hitTestOctave, type KeyInfo } from './layout';
 import { STEPS_PER_OCTAVE, noteFrequency } from '../../audio/tuning';
-import { attackNote, releaseNote } from '../../audio/engine';
+import { attackNote, releaseNote, releaseAll } from '../../audio/engine';
 import { useAppStore } from '../../store';
 
 const MIN_OCTAVE    = 1;
@@ -149,6 +149,9 @@ export function KeyboardContainer() {
   const pointerPositions = useRef(new Map<number, { x: number; y: number }>());
   const lastPinchDist    = useRef<number | null>(null);
   const { pressKey, releaseKey } = useAppStore();
+
+  // Release all notes on unmount (e.g. user switches to luma keyboard)
+  useEffect(() => () => { releaseAll(); }, []);
 
   // Track container width for the octave strip
   useEffect(() => {

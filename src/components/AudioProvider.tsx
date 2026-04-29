@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import * as Tone from 'tone';
+import { releaseAll } from '../audio/engine';
 
 interface AudioContextValue {
   isReady: boolean;
@@ -16,9 +17,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const unlock = () => {
       if (unlocked.current) return;
       unlocked.current = true;
-      // Remove overlay immediately — don't await, so mobile gesture is honoured
       setIsReady(true);
-      // Fire-and-forget: AudioContext.resume() must be called within the gesture stack
       Tone.start().catch(console.error);
     };
     document.addEventListener('pointerdown', unlock, { once: true });
@@ -26,6 +25,20 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     return () => {
       document.removeEventListener('pointerdown', unlock);
       document.removeEventListener('touchstart', unlock);
+    };
+  }, []);
+
+  // Safety net: release all notes when the page is hidden or the window loses
+  // focus (e.g. switching apps, notification shade). Without this, pointerup
+  // events are never delivered and notes stay stuck forever.
+  useEffect(() => {
+    const onHide = () => releaseAll();
+    const onVisibility = () => { if (document.hidden) releaseAll(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('blur', onHide);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('blur', onHide);
     };
   }, []);
 

@@ -22,14 +22,14 @@ export function setInstrument(preset: InstrumentPreset): void {
 
 // Maps pointerId → noteIndex currently held by that pointer
 const activePointers = new Map<number, number>();
-// Maps noteIndex → frequency (for release lookup)
-const noteFreqMap = new Map<number, number>();
+// Maps pointerId → frequency — keyed by pointer so two fingers on the same
+// note don't clobber each other's release lookup.
+const pointerFreqMap = new Map<number, number>();
 
 export function attackNote(noteIndex: number, frequency: number, pointerId: number): void {
-  // Release any note this pointer was already holding (slide)
   releaseNote(pointerId);
   activePointers.set(pointerId, noteIndex);
-  noteFreqMap.set(noteIndex, frequency);
+  pointerFreqMap.set(pointerId, frequency);
   synth.triggerAttack(frequency, Tone.now());
   recorderNoteOn(noteIndex);
 }
@@ -37,19 +37,19 @@ export function attackNote(noteIndex: number, frequency: number, pointerId: numb
 export function releaseNote(pointerId: number): void {
   const noteIndex = activePointers.get(pointerId);
   if (noteIndex === undefined) return;
-  const freq = noteFreqMap.get(noteIndex);
+  const freq = pointerFreqMap.get(pointerId);
   if (freq !== undefined) {
     synth.triggerRelease(freq, Tone.now());
-    noteFreqMap.delete(noteIndex);
+    pointerFreqMap.delete(pointerId);
   }
   activePointers.delete(pointerId);
-  if (noteIndex !== undefined) recorderNoteOff(noteIndex);
+  recorderNoteOff(noteIndex);
 }
 
 export function releaseAll(): void {
   synth.releaseAll();
   activePointers.clear();
-  noteFreqMap.clear();
+  pointerFreqMap.clear();
 }
 
 export async function startAudio(): Promise<void> {

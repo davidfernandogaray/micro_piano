@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect, useState, useMemo } from 'react';
-import { attackNote, releaseNote } from '../../audio/engine';
+import { attackNote, releaseNote, releaseAll } from '../../audio/engine';
 import { noteFrequency, STEPS_PER_OCTAVE } from '../../audio/tuning';
 import { useAppStore } from '../../store';
 
@@ -94,6 +94,9 @@ export function LumaKeyboard() {
   const pointers       = useRef(new Map<number, number>()); // pid → noteIndex
   const activeNoteIds  = useAppStore(s => s.activeNoteIds);
   const { pressKey, releaseKey } = useAppStore();
+
+  // Release all notes on unmount (e.g. user switches to piano keyboard)
+  useEffect(() => () => { releaseAll(); }, []);
 
   // Make hex size responsive to the container
   useEffect(() => {
